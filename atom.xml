@@ -4,13 +4,46 @@
   <title><![CDATA[砌墙集]]></title>
   <link href="https://blog.podog.cn/atom.xml" rel="self"/>
   <link href="https://blog.podog.cn/"/>
-  <updated>2020-07-03T16:18:13+08:00</updated>
+  <updated>2020-07-03T16:18:36+08:00</updated>
   <id>https://blog.podog.cn/</id>
   <author>
     <name><![CDATA[]]></name>
     
   </author>
   <generator uri="http://www.mweb.im/">MWeb</generator>
+  
+  <entry>
+    <title type="html"><![CDATA[深入了一个对象]]></title>
+    <link href="https://blog.podog.cn/15982490668149.html"/>
+    <updated>2020-08-24T14:04:26+08:00</updated>
+    <id>https://blog.podog.cn/15982490668149.html</id>
+    <content type="html"><![CDATA[
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Objective-C 对象]]></title>
+    <link href="https://blog.podog.cn/15982489764672.html"/>
+    <updated>2020-08-24T14:02:56+08:00</updated>
+    <id>https://blog.podog.cn/15982489764672.html</id>
+    <content type="html"><![CDATA[
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[响应式编程]]></title>
+    <link href="https://blog.podog.cn/15940163349808.html"/>
+    <updated>2020-07-06T14:18:54+08:00</updated>
+    <id>https://blog.podog.cn/15940163349808.html</id>
+    <content type="html"><![CDATA[
+<p>以时间为索引的事件序列。</p>
+
+<p>Observables。</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Cordova iOS 插件开发]]></title>

@@ -4,7 +4,7 @@
   <title><![CDATA[砌墙集]]></title>
   <link href="https://blog.podog.cn/atom.xml" rel="self"/>
   <link href="https://blog.podog.cn/"/>
-  <updated>2020-08-26T18:16:28+08:00</updated>
+  <updated>2020-08-26T23:19:22+08:00</updated>
   <id>https://blog.podog.cn/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -30,27 +30,30 @@
 <li>
 <a href="#toc_2">alloc 函数解析</a>
 </li>
-</ul>
-</li>
 <li>
-<a href="#toc_3">isa</a>
-</li>
-<li>
-<a href="#toc_4">类的结构解读</a>
+<a href="#toc_3">callAlloc 函数解析</a>
 </li>
 </ul>
 </li>
 <li>
-<a href="#toc_5">方法</a>
+<a href="#toc_4">isa</a>
+</li>
+<li>
+<a href="#toc_5">类的结构解读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#toc_6">方法</a>
 <ul>
 <li>
-<a href="#toc_6">方法的缓存</a>
+<a href="#toc_7">方法的缓存</a>
 </li>
 <li>
-<a href="#toc_7">方法的查找</a>
+<a href="#toc_8">方法的查找</a>
 </li>
 <li>
-<a href="#toc_8">方法的解析与转发原理</a>
+<a href="#toc_9">方法的解析与转发原理</a>
 </li>
 </ul>
 </li>
@@ -65,7 +68,7 @@
 
 <p>一般来讲，我们新建一个对象的操作通常是：</p>
 
-<pre><code class="language-text">    NSObject *obj = [[NSObject alloc] init];
+<pre><code class="language-objectivec">    NSObject *obj = [[NSObject alloc] init];
 </code></pre>
 
 <p>这个过程发生了什么？对象的本质又是什么呢？我们来一步步进行拆解。这句初始化语句涉及到了两个函数：<code>+ alloc()</code> 和 <code>- init()</code>。这两个函数都分别进行了什么操作呢？</p>
@@ -73,6 +76,8 @@
 <h4 id="toc_2">alloc 函数解析</h4>
 
 <p>首先我们来针对 <code>+ alloc</code> 函数进行调试。先把对 <code>- init（）</code> 的调用删掉，只留下 <code>+ alloc()</code> 的部分，进行断点。</p>
+
+<p><img src="media/15982490668149/15984369654224.jpg" alt="" style="width:1004px;"/></p>
 
 <blockquote>
 <p>常用的代码跟踪方式：<br/>
@@ -82,19 +87,54 @@
 </blockquote>
 
 <p>这里采用 control + step into 的方式。<br/>
-<img src="media/15982490668149/15984369654224.jpg" alt="" style="width:1004px;"/></p>
+<img src="media/15982490668149/15984373429961.jpg" alt="" style="width:770px;"/><br/>
+可以看到，下一个调用的函数为 <code>objc_alloc</code>。</p>
 
-<h3 id="toc_3">isa</h3>
+<p>源码如下：</p>
 
-<h3 id="toc_4">类的结构解读</h3>
+<pre><code class="language-objectivec">id
+objc_alloc(Class cls)
+{
+    return callAlloc(cls, true/*checkNil*/, false/*allocWithZone*/);
+}
+</code></pre>
 
-<h2 id="toc_5">方法</h2>
+<h4 id="toc_3">callAlloc 函数解析</h4>
 
-<h3 id="toc_6">方法的缓存</h3>
+<p><code>callAlloc</code> 源码如下：</p>
 
-<h3 id="toc_7">方法的查找</h3>
+<pre><code class="language-cpp">// Call [cls alloc] or [cls allocWithZone:nil], with appropriate 
+// shortcutting optimizations.
+static ALWAYS_INLINE id
+callAlloc(Class cls, bool checkNil, bool allocWithZone=false)
+{
+#if __OBJC2__
+    if (slowpath(checkNil &amp;&amp; !cls)) return nil;
+    if (fastpath(!cls-&gt;ISA()-&gt;hasCustomAWZ())) {
+        return _objc_rootAllocWithZone(cls, nil);
+    }
+#endif
 
-<h3 id="toc_8">方法的解析与转发原理</h3>
+    // No shortcuts available.
+    if (allocWithZone) {
+        return ((id(*)(id, SEL, struct _NSZone *))objc_msgSend)(cls, @selector(allocWithZone:), nil);
+    }
+    return ((id(*)(id, SEL))objc_msgSend)(cls, @selector(alloc));
+}
+
+</code></pre>
+
+<h3 id="toc_4">isa</h3>
+
+<h3 id="toc_5">类的结构解读</h3>
+
+<h2 id="toc_6">方法</h2>
+
+<h3 id="toc_7">方法的缓存</h3>
+
+<h3 id="toc_8">方法的查找</h3>
+
+<h3 id="toc_9">方法的解析与转发原理</h3>
 
 ]]></content>
   </entry>

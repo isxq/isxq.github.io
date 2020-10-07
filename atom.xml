@@ -4,7 +4,7 @@
   <title><![CDATA[砌墙集]]></title>
   <link href="https://blog.podog.cn/atom.xml" rel="self"/>
   <link href="https://blog.podog.cn/"/>
-  <updated>2020-10-07T18:06:54+08:00</updated>
+  <updated>2020-10-07T18:07:06+08:00</updated>
   <id>https://blog.podog.cn/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -36,6 +36,8 @@ objc code version: 787.1</p>
 </blockquote>
 
 <p>去<a href="https://opensource.apple.com/">苹果开源网站</a>上下载最新的 objc 代码版本（选择最新的 macOS 版本，点击进入之后，search “objc” 即可）。然后开始对源码进行配置，以能够运行。</p>
+
+<p>配置完成的<a href="https://github.com/isxq/objc4/tree/objc4_787.1">项目代码</a>.</p>
 
 <h3 id="toc_1">源码配置</h3>
 

@@ -4,7 +4,7 @@
   <title><![CDATA[砌墙集]]></title>
   <link href="https://blog.podog.cn/atom.xml" rel="self"/>
   <link href="https://blog.podog.cn/"/>
-  <updated>2020-10-07T18:00:33+08:00</updated>
+  <updated>2020-10-07T18:06:54+08:00</updated>
   <id>https://blog.podog.cn/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -179,8 +179,11 @@ objc code version: 787.1</p>
 <h3 id="toc_2">运行</h3>
 
 <p>创建新的 target：objcExplore。<br/>
-设置 Build Settings -&gt;  Link-Time Optimization 为 No。<br/>
+设置二进制依赖。<br/>
 运行。<br/>
+如果断点不生效：<br/>
+Build Settings -&gt;  Link-Time Optimization 为 NO。<br/>
+Build Settings -&gt;  Enable Hardened Runtime 为NO。<br/>
 至此我们就迈出了万里长征的第一步。Runtime 的面纱等你揭开。</p>
 
 ]]></content>

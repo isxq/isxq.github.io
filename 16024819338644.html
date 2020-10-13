@@ -1,0 +1,399 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+    
+  Objective-C Runtime（1）- 万物源于对象 - 砌墙集
+  
+  </title>
+  
+  
+  <link href="atom.xml" rel="alternate" title="砌墙集" type="application/atom+xml">
+    <link rel="stylesheet" href="asset/css/foundation.min.css" />
+    <link rel="stylesheet" href="asset/css/docs.css" />
+    <script src="asset/js/vendor/modernizr.js"></script>
+    <script src="asset/js/vendor/jquery.js"></script>
+  <script src="asset/highlightjs/highlight.pack.js"></script>
+  <link href="asset/highlightjs/styles/github.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+  function before_search(){
+    var searchVal = 'site:blog.podog.cn ' + document.getElementById('search_input').value;
+    document.getElementById('search_q').value = searchVal;
+    return true;
+  }
+</script>
+  </head>
+  <body class="antialiased hide-extras">
+    
+    <div class="marketing off-canvas-wrap" data-offcanvas>
+      <div class="inner-wrap">
+
+
+<nav class="top-bar docs-bar hide-for-small" data-topbar>
+
+
+  <section class="top-bar-section">
+  <div class="row">
+      <div style="position: relative;width:100%;"><div style="position: absolute; width:100%;">
+        <ul id="main-menu" class="left">
+        
+        <li id=""><a target="_self" href="index.html">Home</a></li>
+        
+        <li id=""><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li id=""><a target="_self" href="resume.html">Resume</a></li>
+        
+        </ul>
+
+        <ul class="right" id="search-wrap">
+          <li>
+<form target="_blank" onsubmit="return before_search();" action="https://google.com/search" method="get">
+    <input type="hidden" id="search_q" name="q" value="" />
+    <input tabindex="1" type="search" id="search_input"  placeholder="Search"/>
+</form>
+</li>
+          </ul>
+      </div></div>
+  </div>
+  </section>
+
+</nav>
+
+        <nav class="tab-bar show-for-small">
+  <a href="javascript:void(0)" class="left-off-canvas-toggle menu-icon">
+    <span> &nbsp; 砌墙集</span>
+  </a>
+</nav>
+
+<aside class="left-off-canvas-menu">
+      <ul class="off-canvas-list">
+        
+        <li><a target="_self" href="index.html">Home</a></li>
+        
+        <li><a target="_self" href="archives.html">Archives</a></li>
+        
+        <li><a target="_self" href="resume.html">Resume</a></li>
+        
+
+    <li><label>Categories</label></li>
+
+        
+            <li><a href="Objective-C.html">Objective-C</a></li>
+         
+
+      </ul>
+    </aside>
+
+<a class="exit-off-canvas" href="#"></a>
+
+
+        <section id="main-content" role="main" class="scroll-container">
+        
+       
+
+ <script type="text/javascript">
+  $(function(){
+    $('#menu_item_index').addClass('is_active');
+  });
+</script>
+<div class="row">
+  <div class="large-8 medium-8 columns">
+      <div class="markdown-body article-wrap">
+       <div class="article">
+          
+          <h1>Objective-C Runtime（1）- 万物源于对象</h1>
+     
+        <div class="read-more clearfix">
+          <span class="date">2020/10/12</span>
+
+          <span>posted in&nbsp;</span> 
+          
+              <span class="posted-in"><a href='Objective-C.html'>Objective-C</a></span>
+           
+         
+          <span class="comments">
+            
+
+            
+          </span>
+
+        </div>
+      </div><!-- article -->
+
+      <div class="article-content">
+      <p><code>NSObject *obj = [NSObject init];</code><br/>
+<span id="more"></span><!-- more --></p>
+
+<p>Objective-C 是 C 的超集，它通过 Runtime 赋予了 C 语言面向对象的能力，但是这是怎么完成的？</p>
+
+<p>从 Objective-C 的角度来讲，一般如果我们要创建一个对象，就需要先拥有一个该对象对应的类。我们用关键字 <code>Class</code> 来表示。C++ 本身的类是用 <code>class</code> 来进行表示，我们可以以这个关键字作为突破口来进行深层次的探究。</p>
+
+<p>打开开源代码工程，<code>command + o</code> 搜索 <code>Class</code> 找到相关定义，我们可以看到如下代码：</p>
+
+<pre><code class="language-text">typedef struct objc_class *Class;
+</code></pre>
+
+<p>可以看到 <code>Class</code> 其实是一个 <code>objc_class</code> 类型的结构体指针。继续搜索 <code>objc_class</code>，可以看到：</p>
+
+<pre><code class="language-text">struct objc_class : objc_object {
+    // Class ISA;
+    Class superclass;
+    cache_t cache;             // formerly cache pointer and vtable
+    class_data_bits_t bits;
+    
+    /* ... */   
+}
+</code></pre>
+
+<p>这里我们先忽略具体实现，最直观的信息就是 <code>objc_class</code> 继承于 <code>objc_object</code>。<br/>
+继续往底层探索，<code>objc_object</code> 的实现如下：</p>
+
+<pre><code class="language-text">struct objc_object {
+private:
+    isa_t isa;
+
+public:
+    /* ... */
+}
+</code></pre>
+
+<p>忽略掉相关的方法，<code>objc_object</code> 的内容主要是一个 <code>isa_t</code> 类型的结构体。下面我们就对 <code>isa_t</code> 进行解析。</p>
+
+<h2 id="toc_0">isa_t</h2>
+
+<p><code>isa_t</code> 的定义如下：</p>
+
+<pre><code class="language-text">union isa_t {
+    isa_t() { }
+    isa_t(uintptr_t value) : bits(value) { }
+
+    Class cls;
+    uintptr_t bits;
+#if defined(ISA_BITFIELD)
+    struct {
+        ISA_BITFIELD;  // defined in isa.h
+    };
+#endif
+};
+</code></pre>
+
+<p>这里首先要引入两个概念：联合体和位域。</p>
+
+<h3 id="toc_1">联合体和位域</h3>
+
+<h4 id="toc_2">位域</h4>
+
+<p><strong>位域</strong>定义与结构定义相仿，其形式为：</p>
+
+<pre><code class="language-text">struct 位域结构名 {
+    位域列表
+}；
+</code></pre>
+
+<p>其中位域列表的形式为 </p>
+
+<pre><code class="language-text">类型说明符 位域名: 位域长度(占多少位)
+</code></pre>
+
+<p>例如</p>
+
+<pre><code class="language-text">struct {
+    int a: 4;
+    int b: 2;
+    int c: 8;
+} data;
+</code></pre>
+
+<p>说明该结构体中，共占两个字节。其中位域 a 占 4 位，位域 b 占 2 位，位域 c 占 8 位。</p>
+
+<p>这里可能会存在疑问，因为如果严格来算的话，该结构体的实际内容应该为 14 位。之所以占 2 字节是因为位域遵循着一套压缩规则，即：</p>
+
+<ul>
+<li>如果相邻位域字段的类型相同，且其位宽之和小于这个类型的sizeof大小，则后面的字段将紧邻前一个字段存储，直到不能容纳为止；</li>
+<li>如果相邻位域字段的类型相同，但其位宽之和大于类型的sizeof大小，则后面的字段将从新的存储单元开始，其偏移量为其类型大小的整数倍；</li>
+<li>如果相邻的位域字段的类型不同，则各编译器的具体实现有差异（VC6采取不压缩方式，Dev-C++采取压缩方式）；</li>
+<li>如果位域字段之间穿插着非位域字段，则不进行压缩；</li>
+<li>整个结构体的总大小为最宽基本类型成员大小的整数倍。</li>
+</ul>
+
+<h4 id="toc_3">联合体</h4>
+
+<p><strong>联合体(union）</strong>与结构体(struct)有一些相似之处。但两者有本质上的不同。<br/>
+在结构体中,各成员有各自的内存空间, 一个结构变量的总长度是各成员长度之和。<br/>
+而在联合体中,各成员共享一段内存空间, 一个联合变量的长度等于各成员中最长的长度。</p>
+
+<ul>
+<li>联合体是一个结构；</li>
+<li>它的所有成员相对于基地址的偏移量都为0；</li>
+<li>此结构空间要大到足够容纳最&quot;宽&quot;的成员；</li>
+<li>其对齐方式要适合其中所有的成员；</li>
+</ul>
+
+<h3 id="toc_4">isa_t 的解析</h3>
+
+<p>回到上边 <code>isa_t</code> 的代码实现，我们不难发现它其实就是一个 <code>Class</code> 类型与 <code>bits</code> 的联合体。大小应该是 8 字节。那么该结构的位域列表是什么呢？</p>
+
+<p>这里根据 <code>ISA_BITFIELD</code> 的定义，画出了一张比较直观的图：</p>
+
+<p><img src="media/16024819338644/isa_t.png" alt="isa_t"/></p>
+
+<p>可以看到，不同的架构体系下位域的表示是不一样的，这里只给出了 __arm64__ 和 __x86_64__ 的架构。</p>
+
+<p>在上图中需要我们着重注意的点就是 <code>shiftcls</code> 这个区域保存的就是 cls 的内容，它指向当前对象的类信息。</p>
+
+<p>而其他的标记代表着当前对象的其他标识信息。综上所述，那么就可以得到下图。</p>
+
+<p><img src="media/16024819338644/objc-class.png" alt="objc-class"/></p>
+
+<p>而 class 的 isa 指针将指向自己的元类（meta class），super Class 指针指向自己的父类，如此以来，我们就可以看到那张耳熟能详的关系图：</p>
+
+<p><img src="media/16024819338644/16025582737931.jpg" alt=""/></p>
+
+<p>这也是 Runtime 中意义比较重要的一张图，之后很多的关键点都将围绕它展开。</p>
+
+
+    
+
+      </div>
+
+      <div class="row">
+        <div class="large-6 columns">
+        <p class="text-left" style="padding:15px 0px;">
+      
+        </p>
+        </div>
+        <div class="large-6 columns">
+      <p class="text-right" style="padding:15px 0px;">
+      
+          <a  href="16020508270796.html" 
+          title="Next Post: Objective-C Runtime（0）- 絮絮叨叨和可运行开源代码的配置">Objective-C Runtime（0）- 絮絮叨叨和可运行开源代码的配置 &raquo;</a>
+      
+      </p>
+        </div>
+      </div>
+      <div class="comments-wrap">
+        <div class="share-comments">
+          
+
+          
+
+          
+        </div>
+      </div>
+    </div><!-- article-wrap -->
+  </div><!-- large 8 -->
+
+
+
+
+ <div class="large-4 medium-4 columns">
+  <div class="hide-for-small">
+    <div id="sidebar" class="sidebar">
+          <div id="site-info" class="site-info">
+            
+                <h1>砌墙集</h1>
+                <div class="site-des"></div>
+                <div class="social">
+
+
+
+
+
+
+
+
+
+<a target="_blank" class="github" target="_blank" href="https://github.com/isxq/" title="GitHub">GitHub</a>
+<a target="_blank" class="email" href="mailto:shen_x_q@163.com" title="Email">Email</a>
+  <a target="_blank" class="rss" href="atom.xml" title="RSS">RSS</a>
+                
+              	 </div>
+          	</div>
+
+             
+
+              <div id="site-categories" class="side-item ">
+                <div class="side-header">
+                  <h2>Categories</h2>
+                </div>
+                <div class="side-content">
+
+      	<p class="cat-list">
+        
+            <a href="Objective-C.html"><strong>Objective-C</strong></a>
+         
+        </p>
+
+
+                </div>
+              </div>
+
+              <div id="site-categories" class="side-item">
+                <div class="side-header">
+                  <h2>Recent Posts</h2>
+                </div>
+                <div class="side-content">
+                <ul class="posts-list">
+	      
+		      
+			      <li class="post">
+			        <a href="16024819338644.html">Objective-C Runtime（1）- 万物源于对象</a>
+			      </li>
+		     
+		  
+		      
+			      <li class="post">
+			        <a href="16020508270796.html">Objective-C Runtime（0）- 絮絮叨叨和可运行开源代码的配置</a>
+			      </li>
+		     
+		   
+		  		</ul>
+                </div>
+              </div>
+        </div><!-- sidebar -->
+      </div><!-- hide for small -->
+</div><!-- large 4 -->
+
+</div><!-- row -->
+
+ <div class="page-bottom clearfix">
+  <div class="row">
+   <p class="copyright">Copyright &copy; 2015
+Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a>,&nbsp; 
+Theme used <a target="_blank" href="http://github.com">GitHub CSS</a>.</p>
+  </div>
+</div>
+
+        </section>
+      </div>
+    </div>
+
+  
+    
+
+    <script src="asset/js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+      function fixSidebarHeight(){
+        var w1 = $('.markdown-body').height();
+          var w2 = $('#sidebar').height();
+          if (w1 > w2) { $('#sidebar').height(w1); };
+      }
+      $(function(){
+        fixSidebarHeight();
+      })
+      $(window).load(function(){
+          fixSidebarHeight();
+      });
+     
+    </script>
+
+    
+
+
+
+  </body>
+</html>
